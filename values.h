@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include "exceptions.h"
-
+#include "AvlTree.h" 
 
 class horse;
 
@@ -9,8 +9,7 @@ class herd{
     private:
         const int herdId;
         int num_of_horses ;
-        horse* first_horse;
-        bool circle_herd;
+        AVLTree<horse, int> herd_horses_tree;
 
     public:  
         herd(int herdId);
@@ -21,6 +20,7 @@ class herd{
         void set_first_horse(horse *horse);
         bool get_circle_horse() const;
         void set_circle_horse(bool newResult)  ;
+        AVLTree<horse, int>& get_herd_horse_tree() ;
         
 
         herd& operator=(const herd& other);
@@ -37,8 +37,10 @@ class horse {
         const int horseId;
         const int speed;
         horse* Horse_to_follow;
-        horse* prev_horse;
         herd* horse_herd;  // Pointer to herd
+        bool visited ; 
+        int version ; 
+        bool is_follow_here ; 
 
     public:
         // Constructor declaration
@@ -57,6 +59,12 @@ class horse {
 
         // Change the horse this one follows
         bool change_follow(horse* newFollow);
+        bool get_visited() const ; 
+        void set_visited(bool L) ; 
+        int get_version() const ; 
+        void set_version(int amount ); 
+        bool get_is_follow_here() const ; 
+        void set_is_follow_here(bool K) ; 
 
 };
 

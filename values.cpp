@@ -4,7 +4,7 @@
 #include "values.h"
 
 
-        herd::herd(int herdId) : herdId(herdId) , num_of_horses(0) , first_horse(nullptr) , circle_herd(false) 
+        herd::herd(int herdId) : herdId(herdId) , num_of_horses(0) ,  herd_horses_tree(horseIdKeyFn)
         {
             if(herdId <= 0)
             {
@@ -12,14 +12,7 @@
             }
         }
 
-        bool herd::get_circle_horse() const
-        {
-            return this->circle_herd;
-        }
-        void herd::set_circle_horse(bool newResult)
-        {
-            this->circle_herd = newResult;
-        }
+
 
          int herd::get_herdId() const
         {
@@ -36,34 +29,13 @@
             this->num_of_horses =   newNumber;
         }
 
-        horse* herd::get_first_horse() const
-        {
-            return this->first_horse; 
+        AVLTree<horse, int>& herd::get_herd_horse_tree() {
+            return this->herd_horses_tree ; 
         }
-        void herd::set_first_horse(horse *horse)
-        {
-            first_horse = horse ; 
-        }
-
-        herd& herd::operator=(const herd& other)
-        {
-            if (this == &other) {
-                return *this; // Self-assignment check
-            }
-            num_of_horses = other.num_of_horses;
-            delete first_horse; 
-            if (other.first_horse) {
-                first_horse = new horse(*other.first_horse); 
-            } else {
-                first_horse = nullptr;
-            }
-
-            return *this;
-        }
-
 
         horse::horse(const int horseId, const int speed)
-        : horseId(horseId), speed(speed), Horse_to_follow(nullptr), prev_horse(nullptr) , horse_herd(nullptr)
+        : horseId(horseId), speed(speed), Horse_to_follow(nullptr), horse_herd(nullptr) , visited(false)
+        ,version(0) , is_follow_here(false)
         {
         if (horseId <= 0 || speed <= 0)
         {
@@ -105,10 +77,6 @@
             return true ; 
         }
 
-        horse* horse::get_prev_Horse() const
-        {
-            return this->prev_horse;
-        }
         horse* horse::get_Horse_to_follow() const
         {
             return this->Horse_to_follow;
@@ -127,23 +95,29 @@
             this->Horse_to_follow = horse;
             return true;
         }
-        bool horse::set_prev_horse(horse* horse)
-        {
-            if(this->prev_horse == horse)
-            {
-                return true;
-            }
-            if(horse == this)
-            {
-                return false;
-            }
-            this->prev_horse = horse;
-            return true;
-        }
+
         void horse::set_horse_herd(herd* herd)
         {
             this->horse_herd = herd;
+        } 
+        void horse::set_visited(bool value) {
+            this->visited = value ; 
         }
+        int horse::get_version() const {
+            return this->version;
+        } 
+        void horse::set_version(int amount )
+        {
+            this->version = amount;
+        }
+        bool horse::get_is_follow_here() const
+        {
+            return this->is_follow_here;
+        } 
+        void horse::set_is_follow_here(bool val)
+        {
+            this->is_follow_here = val;
+        } 
 
      int herdIdKeyFn(const herd& herd) {
             return herd.get_herdId();

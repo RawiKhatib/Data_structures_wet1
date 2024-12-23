@@ -99,12 +99,18 @@ StatusType Plains::join_herd(int horseId, int herdId)
     if(find_herd)
     {
         find_horse->getValue().set_Horse_to_follow(nullptr);
-        find_horse->getValue().set_prev_horse(nullptr);
         find_horse->getValue().set_horse_herd(&find_herd->getValue());
 
         int newAmount = find_herd->getValue().get_num_of_horses() + 1;
         find_herd->getValue().set_num_of_horses(newAmount);
-        return StatusType::SUCCESS ; 
+        bool inserted = find_herd->getValue().get_herd_horse_tree().insert(find_horse->getValue());
+        if(inserted)
+        {
+            return  StatusType::SUCCESS ; 
+        }
+        else{
+            return StatusType::FAILURE;
+        }
         
     }
 
@@ -115,7 +121,6 @@ StatusType Plains::join_herd(int horseId, int herdId)
 
         herd NewHerd = herd(herdId);
         NewHerd.set_num_of_horses(FIRST_HORSE);
-        NewHerd.set_first_horse(&find_horse->getValue());
       try{
         herds_Tree.insert(NewHerd);
       } 
@@ -128,8 +133,14 @@ StatusType Plains::join_herd(int horseId, int herdId)
     } 
         Node<herd> *find_herd_again = herds_Tree.find(herdId) ;
 
-        find_horse->getValue().set_horse_herd(&find_herd_again->getValue());
-        return StatusType::SUCCESS ; 
+        bool inserted = find_herd_again->getValue().get_herd_horse_tree().insert(find_horse->getValue());
+        if(inserted)
+        {
+            return StatusType::SUCCESS ;
+        }
+        else{
+            return StatusType::FAILURE;
+        } 
         
     }
 }
@@ -152,55 +163,17 @@ StatusType Plains::follow(int horseId, int horseToFollowId)
         return StatusType::FAILURE;
     }
 
-    horse* newFirstHorse = find_horseId->getValue().get_Horse_to_follow();
+    
     bool set_result1 = find_horseId->getValue().set_Horse_to_follow(&find_horseFollowId->getValue());
-    bool set_result2 = find_horseFollowId->getValue().set_prev_horse(&find_horseId->getValue());
-
-    if(!set_result1 || !set_result2)
+    find_horseId->getValue().set_is_follow_here(true) ; 
+    find_horseFollowId->getValue().set_is_follow_here(true) ; 
+    if(!set_result1)
     {
         return StatusType::FAILURE;
     }
-    else{
-        horse* horsie =  find_horseFollowId->getValue().get_horse_herd()->get_first_horse();//first horse
-
-        bool circle = ((horsie == &find_horseFollowId->getValue() &&
-         find_horseFollowId->getValue().get_prev_Horse() != nullptr) ||
-         find_horseFollowId->getValue().get_horse_herd()->get_circle_horse() == true) ? true : false;
-        
-        bool break_circle1 = (find_horseFollowId->getValue().get_horse_herd()->get_circle_horse() &&
-         find_horseFollowId->getValue().get_Horse_to_follow() == nullptr) ? true : false;
-
-        //when do i know that i broke the circle ?
-        bool break_circle2 = (find_horseFollowId->getValue().get_horse_herd()->get_circle_horse() &&
-        break_circle1);
-
-        if(break_circle2)
-        {
-            //modify we broke the circle :
-            find_horseFollowId->getValue().get_horse_herd()->set_circle_horse(!break_circle2);
-
-            //set first horse :
-            find_horseId->getValue().get_horse_herd()->set_first_horse(newFirstHorse);
-
-        }
-        else if(circle)
-        {
-            //if circle true :
-            find_horseFollowId->getValue().get_horse_herd()->set_circle_horse(circle);
-            //return StatusType::SUCCESS;//no need to change the first horse currently
-        }
-        else if(horsie == &find_horseFollowId->getValue())
-        {
-            find_horseFollowId->getValue().get_horse_herd()->set_first_horse(&find_horseId->getValue());
-        }
-        return StatusType::SUCCESS;
-    }
-
-    //in case he follows first horse :
-
-    
-    
-    
+ 
+    return StatusType::SUCCESS;
+    //in case he follows first horse : 
 }
 
 StatusType Plains::leave_herd(int horseId)
@@ -220,15 +193,12 @@ StatusType Plains::leave_herd(int horseId)
      // update  horseId next 
      // update horse__herd , check num_of_horses and deal with it 
     find_horseId->getValue().set_horse_herd(nullptr);
-    horse* prev_horse = find_horseId->getValue().get_prev_Horse();
-    if(prev_horse !=nullptr) {
-        find_horseId->getValue().get_prev_Horse()->set_Horse_to_follow(nullptr);
-    } 
     find_horseId->getValue().set_Horse_to_follow(nullptr);
-     find_horseId->getValue().set_prev_horse(nullptr);
      int new_num_of_horses = horse_herd->get_num_of_horses() ;
      new_num_of_horses = new_num_of_horses - 1 ; 
      horse_herd->set_num_of_horses(new_num_of_horses) ; 
+     find_horseId->getValue().set_is_follow_here(false) ;
+
     if(new_num_of_horses == 0 ){
         remove_herd(horse_herd->get_herdId()) ;
         add_herd(horse_herd->get_herdId()) ; 
@@ -263,7 +233,7 @@ output_t<int> Plains::get_speed(int horseId)
       
 }
 
-output_t<bool> Plains::leads(int horseId, int otherHorseId)
+output_t<bool> Plains::leads(int horseId, int otherHorseId)//fix this
 {
     if (horseId <= 0 || otherHorseId <= 0 || horseId == otherHorseId)
     {
@@ -301,6 +271,61 @@ output_t<bool> Plains::leads(int horseId, int otherHorseId)
     return output_t<bool>(false);
 }
 
+void inorderTraversal(Node<shared_ptr<horse>> *node, bool &circle, int &leader, int current_version) {
+        if ( circle || leader > 1 || node->getValue()->get_visited() == true || node == nullptr) {
+            return ;
+        }
+
+        // Traverse the left subtree
+        inorderTraversal(node->getLeft(), circle, leader, current_version);
+
+        // Process the current node
+        shared_ptr<horse> horse_ptr = node->getValue();
+
+        horse_ptr->set_visited(true);
+        current_version++;
+
+        while(horse_ptr->get_Horse_to_follow()!= nullptr && horse_ptr->get_Horse_to_follow()->get_version() == horse_ptr->get_version() && horse_ptr->get_Horse_to_follow()->get_version() == current_version  ){
+            if(horse_ptr->get_Horse_to_follow()->get_visited() == true ){
+                circle = true ;
+                break ;
+            }
+            horse_ptr->set_version(current_version) ;
+            horse_ptr->get_Horse_to_follow()->set_visited(true) ;
+            horse_ptr = horse_ptr->get_Horse_to_follow() ;
+        }
+        //check if we exit the while bc the next is null
+        if(horse_ptr->get_Horse_to_follow() == nullptr){
+            leader++ ;
+            horse_ptr->set_version(current_version) ;
+
+        }
+        // or the other thing
+        if(horse_ptr->get_Horse_to_follow()->get_version() != horse_ptr->get_version() ){
+            horse_ptr->set_version(current_version) ;
+        }
+
+        // Traverse the right subtree
+        inorderTraversal(node->getRight(), circle, leader, current_version);
+    }
+
+void after_inorderTraversal(Node<shared_ptr<horse>> *node){
+    if (node == nullptr) {
+        return;
+    }
+
+    // Traverse the left subtree
+    after_inorderTraversal(node->getLeft());
+
+    //check visited
+    if(node->getValue()->get_visited()){
+       node->getValue()->set_visited(false) ;
+    }
+
+    // Traverse the right subtree
+    after_inorderTraversal(node->getRight());
+}
+
 output_t<bool> Plains::can_run_together(int herdId)
 {
     if (herdId <= 0)
@@ -308,31 +333,21 @@ output_t<bool> Plains::can_run_together(int herdId)
         return output_t<bool>(StatusType::INVALID_INPUT);
     }
 
-    Node<herd>* find_herd = herds_Tree.find(herdId);
+    Node<herd> *find_herd = herds_Tree.find(herdId);
     if (!find_herd)
     {
         return output_t<bool>(StatusType::FAILURE);
     }
 
-    horse* temp = find_herd->getValue().get_first_horse();
-    int num_of_horses = find_herd->getValue().get_num_of_horses();
-    int counter = 0;
+    AVLTree<horse, int>  herds_horse_tree = find_herd->getValue().get_herd_horse_tree();
+    bool circle = false ;
+    int leader = 0 ;
+    inorderTraversal(herds_horse_tree.getRoot(),circle , leader, 0 ) ;
+     after_inorderTraversal(herds_horse_tree.getRoot()) ;
+    if( circle || leader > 1 ){
+    return  output_t<bool>(false);
 
-    while (temp)
-    {
-        counter++;
-        if (counter == num_of_horses)
-        {
-            return output_t<bool>(true); // Horses can run together
-        }
-
-        temp = temp->get_Horse_to_follow();
-
-        if (temp == find_herd->getValue().get_first_horse())
-        {
-            break;
-        }
     }
-    // If the loop completes without matching the number of horses, return failure
-    return output_t<bool>(false); // Horses cannot run together
+    return  output_t<bool>(true);
+
 }
