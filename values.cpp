@@ -42,7 +42,7 @@ int horseIdKeyFn(const shared_ptr<horse> &h) {
         }
 
         horse::horse(const int horseId, const int speed)
-        : horseId(horseId), speed(speed), Horse_to_follow(nullptr), horse_herd(nullptr) , visited(false)
+        : horseId(horseId), speed(speed), Horse_to_follow(), horse_herd() , visited(false)
         ,version(0) , is_follow_here(0) , insert_version(0) , is_prev(false) 
         {
         if (horseId <= 0 || speed <= 0)
@@ -73,12 +73,12 @@ int horseIdKeyFn(const shared_ptr<horse> &h) {
             return this->speed;
         }
 
-        shared_ptr<herd> horse::get_horse_herd() const
+        weak_ptr<herd> horse::get_horse_herd() const
         {
             return this->horse_herd;
         }
 
-        bool horse::change_follow(shared_ptr<horse> newFollow)
+        /*bool horse::change_follow(shared_ptr<horse> newFollow)
         {
             if(newFollow->get_HorseId() == Horse_to_follow->get_HorseId())
             {
@@ -91,33 +91,24 @@ int horseIdKeyFn(const shared_ptr<horse> &h) {
 
             this->Horse_to_follow = newFollow;
             return true ;
+        }*/
+
+        weak_ptr<horse> horse::get_Horse_to_follow() {
+            auto followPtr = Horse_to_follow.lock();
+            if (!followPtr || followPtr->get_insert_version() != is_follow_here || horse_herd.lock() != followPtr->get_horse_herd().lock()) {
+                Horse_to_follow.reset();
+                return weak_ptr<horse>();
+            }
+            return Horse_to_follow;
         }
 
-       shared_ptr<horse> horse::get_Horse_to_follow()
-        {
-            if (this->Horse_to_follow == nullptr ||
-             this->Horse_to_follow->get_insert_version() != this->is_follow_here) {
-                this->Horse_to_follow = nullptr;
-                return nullptr;
+        bool horse::set_Horse_to_follow(shared_ptr<horse> horse) {
+            if (!horse|| horse.get() == this) {
+                return false; // Cannot follow itself
             }
-            return this->Horse_to_follow;
-
-        }
-
-        bool horse::set_Horse_to_follow(shared_ptr<horse> horse)
-        {
-            if(horse.get() == this)//trying to follow himself
-            {
-                return false;
-            }
-            if(horse == this->Horse_to_follow)
-            {
-                return true ;
-            }
-            this->Horse_to_follow = horse;
+            Horse_to_follow = horse;
             return true;
         }
-
         void horse::set_horse_herd(shared_ptr<herd> herd)
         {
             this->horse_herd = herd;

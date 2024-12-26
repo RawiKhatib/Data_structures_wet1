@@ -1,72 +1,105 @@
+// 
+// 234218 Data Structures 1.
+// Semester: 2025A (Winter).
+// Wet Exercise #1.
+// 
+// The following main file is necessary to link and run your code.
+// This file is READ ONLY: even if you submit something else, the compiler will use our file.
+// 
+
 #include "plains25a1.h"
 #include <string>
 #include <iostream>
 
 using namespace std;
 
-int main() {
+void print(string cmd, StatusType res);
+void print(string cmd, output_t<int> res);
+void print(string cmd, output_t<bool> res);
+
+int main()
+{
+    
     int d1, d2;
 
-    // Initialize the Plains object
+    // Init
     Plains *obj = new Plains();
+    
+    // Execute all commands in file
+    string op;
+    while (cin >> op)
+    {
+        if (!op.compare("add_herd")) {
+            cin >> d1;
+            print(op, obj->add_herd(d1));
+        } else if (!op.compare("remove_herd")) {
+            cin >> d1;
+            print(op, obj->remove_herd(d1));
+        } else if (!op.compare("add_horse")) {
+            cin >> d1 >> d2;
+            print(op, obj->add_horse(d1, d2));
+        } else if (!op.compare("join_herd")) {
+            cin >> d1 >> d2;
+            print(op, obj->join_herd(d1, d2));
+        } else if (!op.compare("follow")) {
+            cin >> d1 >> d2;
+            print(op, obj->follow(d1, d2));
+        } else if (!op.compare("leave_herd")) {
+            cin >> d1;
+            print(op, obj->leave_herd(d1));
+        } else if (!op.compare("get_speed")) {
+            cin >> d1;
+            print(op, obj->get_speed(d1));
+        } else if (!op.compare("leads")) {
+            cin >> d1 >> d2;
+            print(op, obj->leads(d1, d2));
+        } else if (!op.compare("can_run_together")) {
+            cin >> d1;
+            print(op, obj->can_run_together(d1));
+        } else {
+            cout << "Unknown command: " << op << endl;
+            return -1;
+        }
+        // Verify no faults
+        if (cin.fail()){
+            cout << "Invalid input format" << endl;
+            return -1;
+        }
+    }
 
-    // Test case 1: Add horses
-    obj->add_horse(1, 100);  // Horse 1 with speed 100
-    obj->add_horse(2, 200);  // Horse 2 with speed 200
-    obj->add_horse(3, 300);  // Horse 3 with speed 300
-
-    // Test case 2: Add herd
-    obj->add_herd(1);         // Herd 1
-
-    // Test case 3: Join horses to the herd
-    obj->join_herd(1, 1);    // Horse 1 joins Herd 1
-    obj->join_herd(2, 1);    // Horse 2 joins Herd 1
-    obj->join_herd(3, 1);    // Horse 3 joins Herd 1
-
-    // Test case 4: Horse 1 follows Horse 2
-    obj->follow(1, 2);       // Horse 1 follows Horse 2
-
-    // Test case 5: Check if horses in Herd 1 can run together
-    obj->can_run_together(1); // Should output "True" if they can run together
-
-    // Test case 6: Horse 2 follows Horse 3
-    obj->follow(2, 3);       // Horse 2 follows Horse 3
-
-    // Test case 7: Check if horses in Herd 1 can still run together
-    obj->can_run_together(1); // Should still output "True"
-
-    // Test case 8: Horse 3 leaves Herd 1
-    obj->leave_herd(3);      // Horse 3 leaves Herd 1
-
-    // Test case 9: Horse 3 re-joins Herd 1
-    obj->join_herd(3, 1);    // Horse 3 joins Herd 1 again
-    obj->can_run_together(1); // Should output "True"
-
-    // Test case 10: Horse 2 follows Horse 1
-    obj->follow(2, 1);       // Horse 2 follows Horse 1
-
-    // Test case 11: Check if horses in Herd 1 can still run together
-    obj->can_run_together(1); // Should still output "True"
-
-    // Test case 12: Horse 2 follows Horse 3
-    obj->follow(2, 3);       // Horse 2 follows Horse 3
-
-    // Test case 13: Check if horses in Herd 1 can still run together
-    obj->can_run_together(1); // Should still output "True"
-
-    // Test case 14: Check if Horse 1 leads Horse 3
-    obj->leads(1, 3);         // Should output "True" if Horse 1 leads Horse 3
-
-    // Test case 15: Check if Horse 2 leads Horse 1
-    obj->leads(2, 1);         // Should output "False" if Horse 2 does not lead Horse 1
-
-    // Test case 16: Get speeds of all horses
-    obj->get_speed(1);        // Get speed of Horse 1
-    obj->get_speed(2);        // Get speed of Horse 2
-    obj->get_speed(3);        // Get speed of Horse 3
-
-    // Cleanup
+    // Quit 
     delete obj;
-
     return 0;
+}
+
+// Helpers
+static const char *StatusTypeStr[] =
+{
+    "SUCCESS",
+    "ALLOCATION_ERROR",
+    "INVALID_INPUT",
+    "FAILURE"
+};
+
+void print(string cmd, StatusType res) 
+{
+    cout << cmd << ": " << StatusTypeStr[(int) res] << endl;
+}
+
+void print(string cmd, output_t<int> res)
+{
+    if (res.status() == StatusType::SUCCESS) {
+        cout << cmd << ": " << StatusTypeStr[(int) res.status()] << ", " << res.ans() << endl;
+    } else {
+        cout << cmd << ": " << StatusTypeStr[(int) res.status()] << endl;
+    }
+}
+
+void print(string cmd, output_t<bool> res)
+{
+    if (res.status() == StatusType::SUCCESS) {
+        cout << cmd << ": " << StatusTypeStr[(int) res.status()] << ", " << (res.ans() ? "True" : "False") << endl;
+    } else {
+        cout << cmd << ": " << StatusTypeStr[(int) res.status()] << endl;
+    }
 }

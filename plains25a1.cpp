@@ -92,7 +92,7 @@ StatusType Plains::join_herd(int horseId, int herdId)
     Node<shared_ptr<herd>> *find_empty_herd = empty_herds_Tree->find(herdId) ;
     Node<shared_ptr<horse>> *find_horse = horse_Tree->find(horseId);
 
-    if((find_empty_herd == nullptr && find_herd == nullptr ) || find_horse == nullptr || find_horse->getValue()->get_horse_herd() != nullptr)
+    if((find_empty_herd == nullptr && find_herd == nullptr ) || find_horse == nullptr || !(find_horse->getValue()->get_horse_herd().expired()))
     {
         return StatusType::FAILURE;
     }
@@ -164,6 +164,10 @@ StatusType Plains::join_herd(int horseId, int herdId)
     }
 }
 
+///here change to weak !!
+
+//1 : DONE 
+
 StatusType Plains::follow(int horseId, int horseToFollowId)
 {      
 
@@ -178,10 +182,15 @@ StatusType Plains::follow(int horseId, int horseToFollowId)
     {
         return StatusType::FAILURE;
     }
-     Node<shared_ptr<herd>> herdFollow = find_horseFollowId->getValue()->get_horse_herd() ;
-    Node<shared_ptr<herd>> herd1 = find_horseId->getValue()->get_horse_herd() ;
-    if(herd1.getValue() == nullptr || herdFollow.getValue() == nullptr 
-    || herd1.getValue() != herdFollow.getValue()){
+    Node<weak_ptr<herd>> herdFollow = find_horseFollowId->getValue()->get_horse_herd() ;
+    Node<weak_ptr<herd>> herd1 = find_horseId->getValue()->get_horse_herd() ;
+
+
+    shared_ptr<herd> herdFollow_shared = herdFollow.getValue().lock();
+    shared_ptr<herd> herd1_shared = herd1.getValue().lock();
+
+    if(herd1.getValue().expired() || herdFollow.getValue().expired()
+    || herd1_shared != herdFollow_shared){
         return StatusType::FAILURE;
     }
 
@@ -198,6 +207,9 @@ StatusType Plains::follow(int horseId, int horseToFollowId)
     //in case he follows first horse :
 }
 
+
+//2:
+
 StatusType Plains::leave_herd(int horseId)
 {
     if(horseId <= 0)
@@ -208,12 +220,12 @@ StatusType Plains::leave_herd(int horseId)
 
 
    
-     if(find_horseId == nullptr ){
+    if(find_horseId == nullptr ){
          
         return StatusType::FAILURE ;
      }
-     shared_ptr<herd> horse_herd =find_horseId->getValue()->get_horse_herd() ;
-     if(horse_herd == nullptr){
+    weak_ptr<herd> horse_herd =find_horseId->getValue()->get_horse_herd() ;
+     if(horse_herd.expired()){
         return StatusType::FAILURE ;
      }
      // update prev of the horseId check if prev is null and update the next of the prev
@@ -221,22 +233,23 @@ StatusType Plains::leave_herd(int horseId)
      // update horse__herd , check num_of_horses and deal with it
     find_horseId->getValue()->set_horse_herd(nullptr);
     find_horseId->getValue()->set_Horse_to_follow(nullptr);
-    int new_num_of_horses = horse_herd->get_num_of_horses() ;
+
+    shared_ptr<herd> shared_horse_herd = horse_herd.lock();
+
+    int new_num_of_horses = shared_horse_herd->get_num_of_horses() ;
     new_num_of_horses = new_num_of_horses - 1 ;
-    horse_herd->set_num_of_horses(new_num_of_horses) ;
+    shared_horse_herd->set_num_of_horses(new_num_of_horses) ;
     find_horseId->getValue()->set_is_follow_here(-1) ;
     find_horseId->getValue()->set_insert_version(-1) ;
     find_horseId->getValue()->is_prev = false ; 
-    horse_herd->get_herd_horse_tree()->deleteValue(horseId);
+    shared_horse_herd->get_herd_horse_tree()->deleteValue(horseId);
 
     if(new_num_of_horses == 0 ){
-        remove_herd(horse_herd->get_herdId());
-        add_herd(horse_herd->get_herdId()) ;
+        remove_herd(shared_horse_herd->get_herdId());
+        add_herd(shared_horse_herd->get_herdId()) ;
     }
 
     return StatusType::SUCCESS ;
-
-
 
 }
 
@@ -263,6 +276,10 @@ output_t<int> Plains::get_speed(int horseId)
 
 }
 
+
+// 3:
+
+
 output_t<bool> Plains::leads(int horseId, int otherHorseId)//fix this
 {
     if (horseId <= 0 || otherHorseId <= 0 || horseId == otherHorseId)
@@ -285,8 +302,15 @@ output_t<bool> Plains::leads(int horseId, int otherHorseId)//fix this
     while (temp)
     {
        temp->set_visited(true);
-       if(temp->get_Horse_to_follow() != nullptr){
-        temp = temp->get_Horse_to_follow();}
+
+       if(!(temp->get_Horse_to_follow().expired())){
+            //weak_ptr<horse> weak_follower = temp->get_Horse_to_follow();
+            //shared_ptr<horse> shared_follower = weak_follower.lock();
+            weak_ptr<horse> temp_weak = temp->get_Horse_to_follow();
+            shared_ptr<horse> shared_temp = temp_weak.lock();
+
+            temp = shared_temp;
+        }
         else{
             break ;
         }
@@ -307,9 +331,13 @@ output_t<bool> Plains::leads(int horseId, int otherHorseId)//fix this
     shared_ptr<horse> temp1 = find_horseId->getValue();
 
     while (temp1)
-    {   temp1->set_visited(false);
-if(temp1->get_Horse_to_follow() != nullptr){
-        temp1= temp1->get_Horse_to_follow();}
+    {   
+        temp1->set_visited(false);
+        if(!(temp1->get_Horse_to_follow().expired())){
+            weak_ptr<horse> temp1_weak = temp1->get_Horse_to_follow();
+            shared_ptr<horse> shared_temp1 = temp1_weak.lock();
+            temp1 = shared_temp1;
+        }
         else{
             break ;
         }
@@ -324,11 +352,15 @@ if(temp1->get_Horse_to_follow() != nullptr){
     }
     return output_t<bool>(false);
 }
+
+//4 :
+
+
 // return true if found leader, otherwise return false and if we found cycle
 bool traverse_graph(shared_ptr<horse> node,int version,bool& circle) {
    
     shared_ptr<horse> it = node;
-    if(it->get_Horse_to_follow() == nullptr && it->is_prev == false ){
+    if(it->get_Horse_to_follow().expired() && it->is_prev == false ){
         return true ; 
     }
     if(it->get_version() != 0) {
@@ -345,8 +377,11 @@ bool traverse_graph(shared_ptr<horse> node,int version,bool& circle) {
             return false;
         }
         it->set_version(version);
-        if(it->get_Horse_to_follow()!= nullptr){
-            it = it->get_Horse_to_follow();
+        if(!(it->get_Horse_to_follow().expired())){
+            weak_ptr<horse> it_weak = it->get_Horse_to_follow();
+            shared_ptr<horse> it_shared = it_weak.lock();
+
+            it = it_shared;
         }
         else {
             break ; 
@@ -464,8 +499,3 @@ output_t<bool> Plains::can_run_together(int herdId)
     return  output_t<bool>(true);
 
 }
-
-
-
-
-

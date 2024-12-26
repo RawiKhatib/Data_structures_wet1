@@ -39,8 +39,8 @@ class horse {
 public:
     const int horseId;
     const int speed;
-    shared_ptr<horse> Horse_to_follow;
-    shared_ptr<herd> horse_herd;  // Pointer to herd
+    weak_ptr<horse> Horse_to_follow;
+    weak_ptr<herd> horse_herd;  // Pointer to herd
     bool visited ;
     int version ;
     int is_follow_here ;
@@ -54,9 +54,9 @@ public:
     // Getters for Horse attributes
     const int get_HorseId() const;
     const int get_speed() const;
-    shared_ptr<herd> get_horse_herd() const;
+    weak_ptr<herd> get_horse_herd() const;
     shared_ptr<horse> get_prev_Horse() const;
-    shared_ptr<horse> get_Horse_to_follow()   ;
+    weak_ptr<horse> get_Horse_to_follow()   ;
 
     bool set_Horse_to_follow(shared_ptr<horse> horse);
     bool set_prev_horse(shared_ptr<horse> horse);
