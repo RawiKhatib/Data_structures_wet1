@@ -1,0 +1,6 @@
+[submodule "TechnionDataStructures"]
+	path = TechnionDataStructures
+	url = https://github.com/PNone/TechnionDataStructures.git
+[submodule "MatamGenericTester"]
+	path = MatamGenericTester
+	url = https://github.com/PNone/MatamGenericTester.git
