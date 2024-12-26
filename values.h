@@ -11,7 +11,8 @@ class herd{
 private:
     const int herdId;
     int num_of_horses ;
-    AVLTree<shared_ptr<horse>, int> herd_horses_tree;
+    shared_ptr<AVLTree<shared_ptr<horse>, int>> herd_horses_tree;
+    
 
 public:
     herd(int herdId);
@@ -22,7 +23,7 @@ public:
 //    void set_first_horse(horse *horse);
     bool get_circle_horse() const;
     void set_circle_horse(bool newResult)  ;
-    AVLTree<shared_ptr<horse>, int>& get_herd_horse_tree() ;
+    shared_ptr<AVLTree<shared_ptr<horse>, int>>  get_herd_horse_tree() ;
 
 
     herd& operator=(const herd& other);
@@ -32,17 +33,19 @@ public:
 
 
 
-//add horse dec :
+
 
 class horse {
-private:
+public:
     const int horseId;
     const int speed;
     shared_ptr<horse> Horse_to_follow;
     shared_ptr<herd> horse_herd;  // Pointer to herd
     bool visited ;
     int version ;
-    bool is_follow_here ;
+    int is_follow_here ;
+    int insert_version ; 
+    bool is_prev ; 
 
 public:
     // Constructor declaration
@@ -65,8 +68,11 @@ public:
     void set_visited(bool value)  ;
     int get_version()  ;
     void set_version(int amount );
-    bool get_is_follow_here()  ;
-    void set_is_follow_here(bool K) ;
+    int get_is_follow_here()  ;
+    void set_is_follow_here(int K) ;
+
+    int get_insert_version() const;
+    void set_insert_version(int amount);
 
 };
 

@@ -11,7 +11,8 @@ int horseIdKeyFn(const shared_ptr<horse> &h) {
     return h->get_HorseId();
 }
 
-        herd::herd(int herdId) : herdId(herdId) , num_of_horses(0) ,  herd_horses_tree(horseIdKeyFn)
+        herd::herd(int herdId) : herdId(herdId) , num_of_horses(0) ,  
+         herd_horses_tree(make_shared<AVLTree<shared_ptr<horse>, int>>(horseIdKeyFn)) 
         {
             if(herdId <= 0)
             {
@@ -36,13 +37,13 @@ int horseIdKeyFn(const shared_ptr<horse> &h) {
             this->num_of_horses =   newNumber;
         }
 
-        AVLTree<shared_ptr<horse>, int>& herd::get_herd_horse_tree() {
+        shared_ptr<AVLTree<shared_ptr<horse>, int>> herd::get_herd_horse_tree() {
             return this->herd_horses_tree ;
         }
 
         horse::horse(const int horseId, const int speed)
         : horseId(horseId), speed(speed), Horse_to_follow(nullptr), horse_herd(nullptr) , visited(false)
-        ,version(0) , is_follow_here(false)
+        ,version(0) , is_follow_here(0) , insert_version(0) , is_prev(false) 
         {
         if (horseId <= 0 || speed <= 0)
         {
@@ -94,7 +95,8 @@ int horseIdKeyFn(const shared_ptr<horse> &h) {
 
        shared_ptr<horse> horse::get_Horse_to_follow()
         {
-            if (this->Horse_to_follow == nullptr || this->Horse_to_follow->get_is_follow_here() != this->is_follow_here) {
+            if (this->Horse_to_follow == nullptr ||
+             this->Horse_to_follow->get_insert_version() != this->is_follow_here) {
                 this->Horse_to_follow = nullptr;
                 return nullptr;
             }
@@ -134,12 +136,21 @@ int horseIdKeyFn(const shared_ptr<horse> &h) {
         {
             this->version = amount;
         }
-        bool horse::get_is_follow_here()
+        int horse::get_is_follow_here()
         {
             return this->is_follow_here;
         }
-        void horse::set_is_follow_here(bool val)
-        {
+        void horse::set_is_follow_here(int val)
+        {   
             this->is_follow_here = val;
+        }
+
+        int horse::get_insert_version() const
+        {
+            return this->insert_version;
+        }
+        void horse::set_insert_version(int amount)
+        {    
+            this->insert_version = amount;
         }
 

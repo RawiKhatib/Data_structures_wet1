@@ -16,12 +16,13 @@
 #include "wet1util.h"
 #include "values.h"
 
-
+void print_tree( shared_ptr<AVLTree<shared_ptr<horse>, int>> tree);
 class Plains {
-private:
-    AVLTree<shared_ptr<horse>, int> horse_Tree;
-    AVLTree<shared_ptr<herd>,int> herds_Tree;
-    AVLTree<shared_ptr<herd>,int> empty_herds_Tree;
+public:
+    shared_ptr<AVLTree<shared_ptr<horse>, int>> horse_Tree;
+    shared_ptr<AVLTree<shared_ptr<herd>,int>> herds_Tree;
+    shared_ptr<AVLTree<shared_ptr<herd>,int>> empty_herds_Tree;
+    static int timeStamp ; 
 
     // we can add functions here
 
