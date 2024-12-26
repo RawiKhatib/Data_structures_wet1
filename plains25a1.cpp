@@ -20,16 +20,23 @@ Plains::~Plains(){
 
 
 StatusType Plains::add_herd(int herdId)
-{
+{ 
+    if(herdId <= 0 ){
+        return StatusType::INVALID_INPUT ; 
+    }
     try {
         //Node<herd> *newHerd = new Node<herd>(herdId);
         shared_ptr<herd> newHerd =make_shared<herd>(herd(herdId));
-
-        bool inserted = empty_herds_Tree->insert(newHerd);
         Node<shared_ptr<herd>> *find = herds_Tree->find(herdId) ;
+
+        if(find != nullptr){
+            return StatusType::FAILURE ; 
+        }
+        bool inserted = empty_herds_Tree->insert(newHerd);
+        
         //if inserted is false this means the herd is already in the tree
 
-        if (!inserted || find != nullptr) {
+        if (!inserted ) {
             return StatusType::FAILURE;
         }
         
@@ -92,7 +99,8 @@ StatusType Plains::join_herd(int horseId, int herdId)
     Node<shared_ptr<herd>> *find_empty_herd = empty_herds_Tree->find(herdId) ;
     Node<shared_ptr<horse>> *find_horse = horse_Tree->find(horseId);
 
-    if((find_empty_herd == nullptr && find_herd == nullptr ) || find_horse == nullptr || !(find_horse->getValue()->get_horse_herd().expired()))
+    if((find_empty_herd == nullptr && find_herd == nullptr ) || 
+    find_horse == nullptr || !(find_horse->getValue()->get_horse_herd().expired()))
     {
         return StatusType::FAILURE;
     }
@@ -245,8 +253,8 @@ StatusType Plains::leave_herd(int horseId)
     shared_horse_herd->get_herd_horse_tree()->deleteValue(horseId);
 
     if(new_num_of_horses == 0 ){
-        remove_herd(shared_horse_herd->get_herdId());
-        add_herd(shared_horse_herd->get_herdId()) ;
+     herds_Tree->deleteValue(shared_horse_herd->get_herdId()) ; 
+     add_herd(shared_horse_herd->get_herdId()) ; 
     }
 
     return StatusType::SUCCESS ;
@@ -291,10 +299,31 @@ output_t<bool> Plains::leads(int horseId, int otherHorseId)//fix this
     Node<shared_ptr<horse>>* find_horseId = horse_Tree->find(horseId);
     Node<shared_ptr<horse>>* find_OtherHorseId = horse_Tree->find(otherHorseId);
 
+
     if (!find_horseId || !find_OtherHorseId)
     {
         return output_t<bool>(StatusType::FAILURE);
     }
+    /*if(find_horseId->getValue()->get_horse_herd().lock() == find_OtherHorseId->getValue()->get_horse_herd().lock()){
+        return output_t<bool>(StatusType::FAILURE);
+    }*/
+
+   weak_ptr<herd> herd1 = find_horseId->getValue()->get_horse_herd();
+   weak_ptr<herd> herd2 = find_OtherHorseId->getValue()->get_horse_herd();
+
+   if(herd1.expired() || herd2.expired())
+   {
+        return output_t<bool>(false);
+   }
+
+   shared_ptr<herd> herd1_shared = herd1.lock();
+   shared_ptr<herd> herd2_shared = herd2.lock();
+
+   if(herd1_shared->get_herdId() != herd2_shared->get_herdId())
+   {
+        return output_t<bool>(false);
+   }
+
 
     // Start traversing from find_horseId
    shared_ptr<horse> temp = find_horseId->getValue();
