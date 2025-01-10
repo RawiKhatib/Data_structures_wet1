@@ -3,13 +3,13 @@
 #include "exceptions.h"
 #include "values.h"
 
- int herdIdKeyFn(const shared_ptr<herd> &herd) {
-      return herd->get_herdId();
-}
+        int herdIdKeyFn(const shared_ptr<herd> &herd) {
+            return herd->get_herdId();
+        }
 
-int horseIdKeyFn(const shared_ptr<horse> &h) {
-    return h->get_HorseId();
-}
+        int horseIdKeyFn(const shared_ptr<horse> &h) {
+            return h->get_HorseId();
+        }
 
         herd::herd(int herdId) : herdId(herdId) , num_of_horses(0) ,  
          herd_horses_tree(make_shared<AVLTree<shared_ptr<horse>, int>>(horseIdKeyFn)) 
@@ -61,7 +61,7 @@ int horseIdKeyFn(const shared_ptr<horse> &h) {
 
                     // Note: `herdId` is `const` and cannot be reassigned
                     return *this;
-                }
+        }
 
         const int horse::get_HorseId() const
         {
@@ -78,24 +78,10 @@ int horseIdKeyFn(const shared_ptr<horse> &h) {
             return this->horse_herd;
         }
 
-        /*bool horse::change_follow(shared_ptr<horse> newFollow)
-        {
-            if(newFollow->get_HorseId() == Horse_to_follow->get_HorseId())
-            {
-                return false ;
-            }
-            if(newFollow->get_horse_herd() != this->get_horse_herd())
-            {
-               return false ;
-            }
-
-            this->Horse_to_follow = newFollow;
-            return true ;
-        }*/
-
         weak_ptr<horse> horse::get_Horse_to_follow() {
             auto followPtr = Horse_to_follow.lock();
-            if (!followPtr || followPtr->get_insert_version() != is_follow_here || horse_herd.lock() != followPtr->get_horse_herd().lock()) {
+            if (!followPtr || followPtr->get_insert_version() != is_follow_here 
+            || horse_herd.lock() != followPtr->get_horse_herd().lock()) {
                 Horse_to_follow.reset();
                 return weak_ptr<horse>();
             }

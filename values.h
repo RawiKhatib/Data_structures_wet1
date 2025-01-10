@@ -20,7 +20,6 @@ public:
     int get_num_of_horses() const;
     void set_num_of_horses(int newNumber);
     shared_ptr<horse> get_first_horse() const;
-//    void set_first_horse(horse *horse);
     bool get_circle_horse() const;
     void set_circle_horse(bool newResult)  ;
     shared_ptr<AVLTree<shared_ptr<horse>, int>>  get_herd_horse_tree() ;
@@ -40,7 +39,7 @@ public:
     const int horseId;
     const int speed;
     weak_ptr<horse> Horse_to_follow;
-    weak_ptr<herd> horse_herd;  // Pointer to herd
+    weak_ptr<herd> horse_herd;  
     bool visited ;
     int version ;
     int is_follow_here ;
