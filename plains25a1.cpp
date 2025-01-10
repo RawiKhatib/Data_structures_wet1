@@ -7,6 +7,8 @@
 #define FIRST_HORSE 1
 int Plains::timeStamp = 0 ; 
 
+//Rawi + abed .
+
 Plains::Plains()
     : horse_Tree(make_shared<AVLTree<shared_ptr<horse>, int>>(horseIdKeyFn)),         // Initialize horse_Tree with horseIdKeyFn
       herds_Tree(make_shared<AVLTree<shared_ptr<herd>, int>>(herdIdKeyFn)),          // Initialize herds_Tree with herdIdKeyFn

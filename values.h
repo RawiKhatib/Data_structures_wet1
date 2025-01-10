@@ -7,6 +7,8 @@ using namespace std;
 
 class horse;
 
+//forward dec , updating h .
+
 class herd{
 private:
     const int herdId;

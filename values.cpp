@@ -3,6 +3,8 @@
 #include "exceptions.h"
 #include "values.h"
 
+
+//values : horse , herds .
         int herdIdKeyFn(const shared_ptr<herd> &herd) {
             return herd->get_herdId();
         }

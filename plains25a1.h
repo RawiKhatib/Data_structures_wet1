@@ -16,6 +16,8 @@
 #include "wet1util.h"
 #include "values.h"
 
+//updating h .
+
 void print_tree( shared_ptr<AVLTree<shared_ptr<horse>, int>> tree);
 class Plains {
 public:

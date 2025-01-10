@@ -6,7 +6,7 @@
 // The following main file is necessary to link and run your code.
 // This file is READ ONLY: even if you submit something else, the compiler will use our file.
 // 
-
+//given code
 #include "plains25a1.h"
 #include <string>
 #include <iostream>
